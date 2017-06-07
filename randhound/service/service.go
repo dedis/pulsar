@@ -129,7 +129,7 @@ func (s *Service) Random(msg *randhound.RandRequest) (*randhound.RandReply, onet
 		return nil, onet.NewClientErrorCode(randhound.ErrorInternal, "wrong data-type in skipblock")
 	}
 	rr.Index = indexed.Index
-	log.Lvlf2("Sending %+v", rr)
+	log.Lvlf3("Sending %+v", rr)
 	return rr, nil
 }
 
@@ -171,20 +171,20 @@ func (s *Service) loop() {
 			select {
 			case <-rh.Done:
 
-				log.Lvlf1("RandHound - done")
+				log.Lvl3("RandHound - done")
 
 				random, transcript, err := rh.Random()
 				if err != nil {
 					return err
 				}
-				log.Lvlf1("RandHound - collective randomness: ok")
+				log.Lvl3("RandHound - collective randomness: ok")
 				//log.Lvlf1("RandHound - collective randomness: %v", random)
 
 				err = protocol.Verify(rh.Suite(), random, transcript)
 				if err != nil {
 					return err
 				}
-				log.Lvlf1("RandHound - verification: ok")
+				log.Lvl3("RandHound - verification: ok")
 
 				s.storage.Lock()
 				if s.latest == nil || s.latest.Index == 0 {
