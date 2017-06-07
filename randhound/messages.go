@@ -14,6 +14,11 @@ func init() {
 	network.RegisterMessage(RandReply{})
 }
 
+const (
+	ErrorInternal = 4000 + iota
+	ErrorParameter
+)
+
 // SetupRequest ...
 type SetupRequest struct {
 	Roster   *onet.Roster
@@ -27,11 +32,14 @@ type SetupReply struct {
 }
 
 // RandRequest sent from client to randomness service to request collective randomness.
+// If Index > 0, it will search for the skipblock with that index.
 type RandRequest struct {
+	Index int
 }
 
 // RandReply sent from randomness service to client to return collective randomness.
 type RandReply struct {
-	R []byte
-	T *protocol.Transcript
+	R     []byte
+	T     *protocol.Transcript
+	Index int
 }

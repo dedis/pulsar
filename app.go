@@ -52,6 +52,13 @@ func main() {
 			Aliases:   []string{"r"},
 			ArgsUsage: groupsDef,
 			Action:    cmdRandom,
+			Flags: []cli.Flag{
+				cli.IntFlag{
+					Name:  "index, i",
+					Value: 0,
+					Usage: "Get this block",
+				},
+			},
 		},
 	}
 	cliApp.Flags = []cli.Flag{
@@ -83,7 +90,7 @@ func cmdRandom(c *cli.Context) error {
 	// log.Info("Random command")
 	group := readGroup(c)
 	client := randhound.NewClient()
-	reply, err := client.Random(group.Roster)
+	reply, err := client.Random(group.Roster, c.Int("index"))
 	if err != nil {
 		return err
 	}
@@ -97,6 +104,7 @@ func cmdRandom(c *cli.Context) error {
 	log.Infof("collective randomness: %x", reply.R)
 	log.Infof("verification: ok")
 	log.Infof("timestamp: %s", reply.T.Time)
+	log.Infof("index: %d", reply.Index)
 
 	return nil
 }

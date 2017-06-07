@@ -30,9 +30,9 @@ func (c *Client) Setup(roster *onet.Roster, groups int, purpose string,
 }
 
 // Random ...
-func (c *Client) Random(roster *onet.Roster) (*RandReply, onet.ClientError) {
+func (c *Client) Random(roster *onet.Roster, index int) (*RandReply, onet.ClientError) {
 	dst := roster.List[0]
-	request := &RandRequest{}
+	request := &RandRequest{Index: index}
 	reply := &RandReply{}
 	if err := c.SendProtobuf(dst, request, reply); err != nil {
 		return nil, err
