@@ -116,7 +116,7 @@ func (s *Service) Random(msg *randhound.RandRequest) (*randhound.RandReply, onet
 	if msg.Index == 0 {
 		indexed = s.latest
 	}
-	log.Lvl2("Got random-request for index", msg.Index, "and will send index", indexed)
+	log.Lvl2("Got random-request for index", msg.Index, "and will send index", indexed.Index)
 	_, rrInt, err := network.Unmarshal(indexed.Data)
 	if err != nil {
 		return nil, onet.NewClientErrorCode(randhound.ErrorInternal, "couldn't unmarshal skipblock-data")
