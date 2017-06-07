@@ -153,7 +153,7 @@ func (s *Service) loop() {
 	s.save()
 	for {
 		err := func() error {
-			log.Lvl2("Creating randomness")
+			log.Lvl3("Creating randomness")
 			t := s.storage.Genesis.Roster.GenerateBinaryTree()
 			proto, err := s.CreateProtocol(ServiceName, t)
 			if err != nil {
@@ -203,6 +203,7 @@ func (s *Service) loop() {
 					s.latest = rep.Latest
 				}
 
+				log.Lvl2("Stored randomness at index", rep.Latest.Index)
 				s.storage.Unlock()
 
 			case <-time.After(time.Second * time.Duration(t.Size()) * 2):
