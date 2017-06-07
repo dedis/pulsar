@@ -148,8 +148,8 @@ func (s *Service) loop() {
 	if len(rep.Update) == 0 {
 		log.Error("no updates yet")
 	}
-	log.Lvl1(s.ServerIdentity(), "updated to", s.latest.Index)
 	s.latest = rep.Update[len(rep.Update)-1]
+	log.Lvl1(s.ServerIdentity(), "updated to", s.latest.Index)
 	s.save()
 	for {
 		err := func() error {
@@ -187,7 +187,7 @@ func (s *Service) loop() {
 				log.Lvlf1("RandHound - verification: ok")
 
 				s.storage.Lock()
-				if s.latest == nil {
+				if s.latest == nil || s.latest.Index == 0 {
 					s.randReady <- true
 					s.latest = s.storage.Genesis
 				}
