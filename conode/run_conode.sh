@@ -110,6 +110,7 @@ runLocal(){
 	go install $CONODE_GO
 
 	rm -f public.toml
+	(
 	for n in $( seq $NBR ); do
 		co=co$n
 		if [ -f $co/public.toml ]; then
@@ -125,6 +126,7 @@ runLocal(){
 		$CONODE_BIN -c $co/private.toml -d $DEBUG &
 		cat $co/public.toml >> public.toml
 	done
+	) | tee -a ~/pulsar.log
 	sleep 1
 
 	cat - <<EOF
