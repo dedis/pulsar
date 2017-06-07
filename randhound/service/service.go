@@ -22,6 +22,7 @@ var randhoundService onet.ServiceID
 func init() {
 	randhoundService, _ = onet.RegisterNewService(ServiceName, newService)
 	network.RegisterMessage(propagateSetup{})
+	network.RegisterMessage(storage{})
 	network.RegisterMessage(PulsarDef{})
 }
 
@@ -87,6 +88,7 @@ func (s *Service) Setup(msg *randhound.SetupRequest) (*randhound.SetupReply, one
 	<-s.randReady
 
 	reply := &randhound.SetupReply{}
+	s.save()
 	return reply, nil
 }
 
@@ -108,6 +110,7 @@ func (s *Service) Random(msg *randhound.RandRequest) (*randhound.RandReply, onet
 		return nil, onet.NewClientErrorCode(randhound.ErrorInternal, "no random values yet")
 	}
 	s.latest = rep.Update[len(rep.Update)-1]
+
 	if msg.Index > len(rep.Update) || msg.Index < 0 {
 		return nil, onet.NewClientErrorCode(randhound.ErrorParameter, "invalid index")
 	}
@@ -126,6 +129,7 @@ func (s *Service) Random(msg *randhound.RandRequest) (*randhound.RandReply, onet
 		return nil, onet.NewClientErrorCode(randhound.ErrorInternal, "wrong data-type in skipblock")
 	}
 	rr.Index = indexed.Index
+	log.Lvlf2("Sending %+v", rr)
 	return rr, nil
 }
 
@@ -137,6 +141,16 @@ func (s *Service) propagate(env *network.Envelope) {
 
 func (s *Service) loop() {
 	cl := skipchain.NewClient()
+	rep, cerr := cl.GetUpdateChain(s.storage.Genesis.Roster, s.storage.Genesis.Hash)
+	if cerr != nil {
+		log.Error(cerr)
+	}
+	if len(rep.Update) == 0 {
+		log.Error("no updates yet")
+	}
+	log.Lvl1(s.ServerIdentity(), "updated to", s.latest.Index)
+	s.latest = rep.Update[len(rep.Update)-1]
+	s.save()
 	for {
 		err := func() error {
 			log.Lvl2("Creating randomness")
@@ -199,6 +213,7 @@ func (s *Service) loop() {
 		if err != nil {
 			log.Error("While creating randomness:", err)
 		}
+		s.save()
 		time.Sleep(time.Duration(s.pulsarDef.Interval) * time.Millisecond)
 	}
 }
@@ -244,6 +259,8 @@ func (s *Service) tryLoad() error {
 			return errors.New("couldn't recover pulsarDef from genesis-block")
 		}
 		s.latest = s.storage.Genesis
+
+		go s.loop()
 	}
 
 	return nil
@@ -259,7 +276,7 @@ func newService(c *onet.Context) onet.Service {
 	}
 	s.RegisterProcessorFunc(network.MessageType(propagateSetup{}), s.propagate)
 	if err := s.tryLoad(); err != nil {
-		log.Error(err)
+		log.Error(s.ServerIdentity(), err)
 	}
 	return s
 
