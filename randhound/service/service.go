@@ -111,7 +111,7 @@ func (s *Service) Random(msg *randhound.RandRequest) (*randhound.RandReply, onet
 	}
 	s.latest = rep.Update[len(rep.Update)-1]
 
-	if msg.Index > len(rep.Update) || msg.Index < 0 {
+	if msg.Index >= len(rep.Update) || msg.Index < 0 {
 		return nil, onet.NewClientErrorCode(randhound.ErrorParameter, "invalid index")
 	}
 
