@@ -100,25 +100,27 @@ func (s *Service) Random(msg *randhound.RandRequest) (*randhound.RandReply, onet
 	if s.storage.Setup == false {
 		return nil, onet.NewClientError(errors.New("Randomness service not setup"))
 	}
-
-	cl := skipchain.NewClient()
-	rep, cerr := cl.GetUpdateChain(s.storage.Genesis.Roster, s.storage.Genesis.Hash)
-	if cerr != nil {
-		return nil, onet.NewClientErrorCode(randhound.ErrorInternal, "error while updating skipchain")
-	}
-	if len(rep.Update) == 0 {
-		return nil, onet.NewClientErrorCode(randhound.ErrorInternal, "no random values yet")
-	}
-	s.latest = rep.Update[len(rep.Update)-1]
-
-	if msg.Index >= len(rep.Update) || msg.Index < 0 {
+	if msg.Index < 0 {
 		return nil, onet.NewClientErrorCode(randhound.ErrorParameter, "invalid index")
 	}
 
-	indexed := rep.Update[msg.Index]
+	cl := skipchain.NewClient()
+	var indexed *skipchain.SkipBlock
 	if msg.Index == 0 {
+		rep, cerr := cl.GetUpdateChain(s.storage.Genesis.Roster, s.latest.Hash)
+		if cerr != nil {
+			return nil, cerr
+		}
+		s.latest = rep.Update[len(rep.Update)-1]
 		indexed = s.latest
+	} else {
+		var cerr onet.ClientError
+		indexed, cerr = cl.GetSingleBlockByIndex(s.storage.Genesis.Roster, s.storage.Genesis.Hash, msg.Index)
+		if cerr != nil {
+			return nil, onet.NewClientErrorCode(randhound.ErrorInternal, cerr.Error())
+		}
 	}
+
 	log.Lvl2("Got random-request for index", msg.Index, "and will send index", indexed.Index)
 	_, rrInt, err := network.Unmarshal(indexed.Data)
 	if err != nil {
