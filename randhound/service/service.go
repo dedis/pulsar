@@ -155,7 +155,7 @@ func (s *Service) loop() {
 	s.save()
 	for {
 		err := func() error {
-			log.LLvl3("Creating randomness")
+			log.Lvl3("Creating randomness")
 			t := s.storage.Genesis.Roster.GenerateBinaryTree()
 			proto, err := s.CreateProtocol(ServiceName, t)
 			if err != nil {
@@ -173,7 +173,7 @@ func (s *Service) loop() {
 			select {
 			case <-rh.Done:
 
-				log.LLvl3("RandHound - done")
+				log.Lvl3("RandHound - done")
 
 				random, transcript, err := rh.Random()
 				if err != nil {
@@ -186,7 +186,7 @@ func (s *Service) loop() {
 				if err != nil {
 					return err
 				}
-				log.LLvl3("RandHound - verification: ok")
+				log.Lvl3("RandHound - verification: ok")
 
 				s.storage.Lock()
 				if s.latest == nil || s.latest.Index == 0 {
