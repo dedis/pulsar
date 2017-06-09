@@ -155,7 +155,7 @@ func (s *Service) loop() {
 	s.save()
 	for {
 		err := func() error {
-			log.Lvl3("Creating randomness")
+			log.LLvl3("Creating randomness")
 			t := s.storage.Genesis.Roster.GenerateBinaryTree()
 			proto, err := s.CreateProtocol(ServiceName, t)
 			if err != nil {
@@ -173,7 +173,7 @@ func (s *Service) loop() {
 			select {
 			case <-rh.Done:
 
-				log.Lvl3("RandHound - done")
+				log.LLvl3("RandHound - done")
 
 				random, transcript, err := rh.Random()
 				if err != nil {
@@ -186,19 +186,21 @@ func (s *Service) loop() {
 				if err != nil {
 					return err
 				}
-				log.Lvl3("RandHound - verification: ok")
+				log.LLvl3("RandHound - verification: ok")
 
 				s.storage.Lock()
 				if s.latest == nil || s.latest.Index == 0 {
 					s.randReady <- true
 					s.latest = s.storage.Genesis
 				}
+				s.storage.Unlock()
 
 				rr := &randhound.RandReply{
 					R: random,
 					T: transcript,
 				}
 				rep, cerr := cl.StoreSkipBlock(s.latest, nil, rr)
+				s.storage.Lock()
 				if cerr != nil {
 					log.Error("Couldn't store new skipblock:", cerr)
 				} else {
